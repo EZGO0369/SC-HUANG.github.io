@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUICK MTX QR BB槍 V.0.03_bata</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --paper:#ECEFED; --card:#FFFFFF; --ink:#16201C; --muted:#697570;
+    --line:#D3D9D6; --line-strong:#B6BEBA; --green:#00543A; --green-ink:#0A6E4D;
+    --amber:#C9870F; --amber-bg:#FBF1DC; --blue:#1F5C8C; --blue-bg:#E6EFF6; --radius:5px;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  button{font-family:inherit;cursor:pointer;}
+  input,textarea,select{font-family:inherit;}
+
+  .topbar{background:var(--green);color:#fff;padding:15px 18px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20;border-bottom:3px solid #003F2C;}
+  .brand{display:flex;align-items:baseline;gap:10px;min-width:0;}
+  .brand .mark{font-family:var(--mono);font-weight:700;letter-spacing:.5px;font-size:15px;border:1.5px solid rgba(255,255,255,.7);padding:3px 8px;border-radius:3px;white-space:nowrap;}
+  .brand .sub{font-size:13px;opacity:.82;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .topbar .spacer{flex:1;}
+  .count-pill{font-family:var(--mono);font-size:12.5px;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:20px;white-space:nowrap;}
+
+  .toolbar{max-width:1100px;margin:0 auto;padding:16px 18px 4px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .search{flex:1;min-width:160px;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;}
+  .search input{border:0;outline:0;width:100%;font-size:15px;background:transparent;color:var(--ink);}
+  .search svg{flex:none;}
+  .btn{border:1px solid var(--line-strong);background:var(--card);color:var(--ink);padding:11px 15px;border-radius:var(--radius);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;min-height:44px;}
+  .btn:hover{border-color:var(--green-ink);color:var(--green-ink);}
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--green);border-color:var(--green);color:#fff;}
+  .btn-primary:hover{background:var(--green-ink);border-color:var(--green-ink);color:#fff;}
+  .btn-rev{border-color:#C6DAEA;color:var(--blue);background:var(--blue-bg);}
+  .btn-rev:hover{border-color:var(--blue);color:var(--blue);}
+  .btn svg{flex:none;}
+
+  .chips{max-width:1100px;margin:0 auto;padding:10px 18px 2px;display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{font-family:var(--mono);font-size:12.5px;letter-spacing:.3px;border:1px solid var(--line);background:var(--card);color:var(--muted);padding:7px 13px;border-radius:20px;min-height:36px;}
+  .chip.active{background:var(--ink);border-color:var(--ink);color:#fff;}
+  .chip:hover:not(.active){border-color:var(--ink);color:var(--ink);}
+
+  .grid{max-width:1100px;margin:0 auto;padding:14px 18px 90px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden;transition:border-color .12s,box-shadow .12s;}
+  .card:hover{border-color:var(--line-strong);box-shadow:0 2px 0 rgba(0,0,0,.04);}
+  .card-head{display:flex;align-items:flex-start;gap:12px;padding:14px 15px 0;}
+  .card-head .meta{flex:1;min-width:0;}
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--green-ink);background:#E2EFEA;border:1px solid #C7E0D7;padding:2px 8px;border-radius:3px;margin-bottom:7px;}
+  .tag.empty{color:var(--muted);background:#EEF1F0;border-color:var(--line);}
+  .card h3{margin:0;font-size:15.5px;line-height:1.3;word-break:break-word;}
+  .qr-mini{flex:none;width:60px;height:60px;border:1px solid var(--line);border-radius:3px;padding:3px;background:#fff;display:grid;place-items:center;}
+  .qr-mini img,.qr-mini canvas{width:100%!important;height:100%!important;display:block;}
+  .card-body{padding:11px 15px 0;}
+  .content-preview{font-family:var(--mono);font-size:12.5px;color:#33403A;background:#F5F7F6;border:1px solid var(--line);border-left:3px solid var(--line-strong);border-radius:3px;padding:9px 11px;white-space:pre-wrap;word-break:break-word;max-height:96px;overflow:hidden;}
+  .sep-glyph{color:var(--blue);font-weight:700;padding:0 2px;}
+  .var-hl{color:var(--blue);font-weight:700;background:var(--blue-bg);border-radius:2px;padding:0 2px;}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+  .mini-flag{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10.5px;border-radius:3px;padding:2px 7px;}
+  .mini-flag.fields{color:var(--blue);background:var(--blue-bg);border:1px solid #C6DAEA;}
+  .mini-flag.enter{color:var(--amber);background:var(--amber-bg);border:1px solid #ECD9A8;}
+  .mini-flag.var{color:#5A3FA0;background:#EFEAFB;border:1px solid #D6C9F2;}
+  .card-foot{margin-top:auto;display:flex;border-top:1px solid var(--line);}
+  .card-foot button{flex:1;border:0;background:transparent;color:var(--muted);padding:13px 6px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;}
+  .card-foot button + button{border-left:1px solid var(--line);}
+  .card-foot button:hover{background:#F5F7F6;color:var(--ink);}
+  .card-foot .scan{color:var(--green-ink);}
+  .card-foot .scan:hover{background:#E2EFEA;color:var(--green);}
+
+  .empty-state{max-width:520px;margin:8vh auto;text-align:center;padding:0 20px;}
+  .empty-state .icon{width:64px;height:64px;margin:0 auto 18px;border:2px dashed var(--line-strong);border-radius:8px;display:grid;place-items:center;color:var(--muted);}
+  .empty-state h2{margin:0 0 8px;font-size:20px;}
+  .empty-state p{margin:0 0 20px;color:var(--muted);font-size:14px;}
+
+  .overlay{position:fixed;inset:0;background:rgba(15,22,19,.55);z-index:40;display:none;align-items:flex-start;justify-content:center;padding:20px 14px;overflow-y:auto;}
+  .overlay.open{display:flex;}
+  #scanOverlay{z-index:50;} #varsOverlay{z-index:55;}
+  .modal{background:var(--card);border-radius:7px;width:100%;max-width:500px;border-top:4px solid var(--green);box-shadow:0 18px 50px rgba(0,0,0,.3);margin:auto 0;}
+  .modal.vars-card{border-top-color:var(--blue);}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);}
+  .modal-head h2{margin:0;font-size:17px;}
+  .modal-head .x{border:0;background:transparent;color:var(--muted);font-size:26px;line-height:1;padding:4px 10px;border-radius:4px;}
+  .modal-head .x:hover{background:#F0F2F1;color:var(--ink);}
+  .modal-body{padding:18px;}
+
+  .tabs{display:flex;border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden;margin-bottom:14px;}
+  .tabs button{flex:1;border:0;background:#F5F7F6;color:var(--muted);padding:12px;font-size:14px;font-weight:700;}
+  .tabs button.active{background:var(--green);color:#fff;}
+
+  .varbar{background:#F7F5FC;border:1px solid #E2D9F4;border-radius:var(--radius);padding:10px 11px;margin-bottom:16px;}
+  .varbar .vlabel{font-size:12px;font-weight:700;color:#5A3FA0;margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+  .varbar .vchips{display:flex;flex-wrap:wrap;gap:6px;}
+  .vchip{font-family:var(--mono);font-size:12px;border:1px solid #D6C9F2;background:#fff;color:#5A3FA0;padding:5px 10px;border-radius:4px;}
+  .vchip:hover{background:#EFEAFB;}
+  .vchip b{color:var(--ink);font-weight:700;}
+  .vmanage{font-size:12px;border:1px dashed #C9B8EE;background:#fff;color:#5A3FA0;padding:5px 10px;border-radius:4px;font-weight:700;}
+  .vmanage:hover{background:#EFEAFB;}
+  .vnone{font-size:12px;color:var(--muted);}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:7px;letter-spacing:.2px;}
+  .field input[type=text],.field textarea,.field select{width:100%;border:1px solid var(--line-strong);border-radius:var(--radius);padding:11px 12px;font-size:15px;color:var(--ink);background:#fff;outline:0;}
+  .field textarea{font-family:var(--mono);font-size:14px;resize:vertical;min-height:100px;line-height:1.45;}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--green-ink);box-shadow:0 0 0 3px rgba(0,84,58,.12);}
+  .field .hint{font-size:12px;color:var(--muted);margin-top:6px;}
+  .field .hint code{font-family:var(--mono);background:#F0F2F1;border:1px solid var(--line);padding:0 4px;border-radius:3px;}
+  .row2{display:flex;gap:12px;} .row2 .field{flex:1;}
+
+  .frow{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .frow .idx{font-family:var(--mono);font-size:12px;color:var(--muted);width:22px;text-align:center;flex:none;}
+  .frow input{flex:1;border:1px solid var(--line-strong);border-radius:var(--radius);padding:11px 12px;font-family:var(--mono);font-size:14px;outline:0;}
+  .frow input:focus{border-color:var(--green-ink);box-shadow:0 0 0 3px rgba(0,84,58,.12);}
+  .frow .mv{border:1px solid var(--line);background:#F5F7F6;color:var(--muted);width:34px;height:40px;border-radius:4px;font-size:13px;flex:none;display:grid;place-items:center;}
+  .frow .mv:hover{color:var(--ink);border-color:var(--line-strong);}
+  .frow .rm{border:1px solid var(--line);background:#fff;color:#B0413A;width:38px;height:40px;border-radius:4px;flex:none;display:grid;place-items:center;}
+  .frow .rm:hover{background:#FBEAE8;}
+  .addfield{border:1px dashed var(--line-strong);background:#F5F7F6;color:var(--green-ink);width:100%;padding:11px;border-radius:var(--radius);font-weight:700;font-size:13.5px;margin-top:2px;}
+  .addfield:hover{border-color:var(--green-ink);background:#E9F2EE;}
+
+  .modal-foot{display:flex;gap:10px;padding:0 18px 18px;}
+  .modal-foot .btn{flex:1;justify-content:center;}
+
+  /* vars manager */
+  .vintro{font-size:12.5px;color:var(--muted);background:#F7F5FC;border:1px solid #E2D9F4;border-radius:var(--radius);padding:11px 12px;margin-bottom:16px;line-height:1.55;}
+  .vintro code{font-family:var(--mono);background:#fff;border:1px solid #D6C9F2;color:#5A3FA0;padding:0 5px;border-radius:3px;}
+  .vrow{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+  .vrow .vtoken{font-family:var(--mono);font-size:12.5px;color:#5A3FA0;background:#F7F5FC;border:1px solid #E2D9F4;border-radius:4px;padding:9px 10px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;flex:1.1;}
+  .vrow .veq{color:var(--muted);flex:none;}
+  .vrow input{flex:1;border:1px solid var(--line-strong);border-radius:4px;padding:9px 11px;font-family:var(--mono);font-size:14px;outline:0;min-width:0;}
+  .vrow input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(31,92,140,.12);}
+  .vrow .rm{border:1px solid var(--line);background:#fff;color:#B0413A;width:38px;height:38px;border-radius:4px;flex:none;display:grid;place-items:center;}
+  .vrow .rm:hover{background:#FBEAE8;}
+  .vadd{display:flex;gap:9px;margin-top:6px;border-top:1px dashed var(--line);padding-top:14px;}
+  .vadd input{border:1px solid var(--line-strong);border-radius:4px;padding:10px 11px;font-family:var(--mono);font-size:14px;outline:0;min-width:0;}
+  .vadd .vn{flex:1.1;} .vadd .vv{flex:1;}
+  .vadd input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(31,92,140,.12);}
+  .vadd button{border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:4px;padding:0 16px;font-weight:700;font-size:13.5px;flex:none;}
+  .vadd button:hover{background:#17486E;}
+  .vempty{font-size:13px;color:var(--muted);text-align:center;padding:8px 0 14px;}
+
+  .scan-card{max-width:420px;}
+  .scan-body{padding:8px 24px 24px;text-align:center;}
+  .scan-tag{font-family:var(--mono);font-size:12.5px;color:var(--green-ink);font-weight:700;letter-spacing:.4px;}
+  .scan-title{font-size:19px;font-weight:700;margin:5px 0 16px;word-break:break-word;}
+  .qr-big{width:272px;height:272px;margin:0 auto 14px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;place-items:center;}
+  .qr-big img,.qr-big canvas{width:100%!important;height:100%!important;}
+  .scan-struct{text-align:left;background:#F5F7F6;border:1px solid var(--line);border-radius:4px;padding:12px;max-height:150px;overflow:auto;}
+  .scan-fieldline{font-family:var(--mono);font-size:13px;color:#2B362F;padding:3px 0;display:flex;gap:8px;}
+  .scan-fieldline .n{color:var(--muted);width:18px;flex:none;}
+  .scan-note{font-family:var(--mono);font-size:11.5px;color:var(--blue);margin-top:8px;text-align:left;}
+  .scan-foot{display:flex;gap:10px;margin-top:16px;}
+  .scan-foot .btn{flex:1;justify-content:center;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:24px;font-size:14px;opacity:0;transition:all .25s;z-index:60;pointer-events:none;font-weight:600;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .footnote{max-width:1100px;margin:10px auto 0;padding:14px 18px 34px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);}
+  .footnote code{font-family:var(--mono);background:#fff;border:1px solid var(--line);padding:1px 6px;border-radius:3px;color:var(--ink);}
+  .footnote b{color:var(--ink);}
+  .hidden{display:none!important;}
+
+  @media (max-width:520px){ .brand .sub{display:none;} .grid{grid-template-columns:1fr;} .qr-big{width:240px;height:240px;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="mark">QUICK MTX QR BB槍 V.0.03_bata</span><span class="sub">維修紀錄 · 快速掃描輸入 ^.^y 昌</span></div>
+  <div class="spacer"></div>
+  <span class="count-pill" id="countPill">0 筆</span>
+</div>
+
+<div class="toolbar">
+  <div class="search">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#697570" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input id="search" type="text" placeholder="搜尋…" autocomplete="off">
+  </div>
+  <button class="btn btn-rev" id="varsBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="15" r="3"/></svg>版別 / 變數</button>
+  <button class="btn" id="importBtn">匯入</button>
+  <button class="btn" id="exportBtn">備份</button>
+  <button class="btn btn-primary" id="addBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>新增</button>
+  <input type="file" id="importFile" accept="application/json" class="hidden">
+</div>
+
+<div class="chips" id="chips"></div>
+<div id="gridWrap"><div class="grid" id="grid"></div></div>
+
+<div class="footnote" id="footnote">
+  掃 QR＝<b>鍵盤輸入</b>。多欄位用 <code>Tab ↹</code> 跳欄。
+  版別等會變動的值，在內容裡寫成 <code>{變數名}</code>（例：<code>REV.{AMM_REV}</code>），
+  之後到「版別 / 變數」改一次，所有用到的紀錄一起更新。
+  提醒：部分掃描器需在設定開啟 <b>Tab/CR 控制字元輸出</b>。
+</div>
+
+<!-- 編輯 / 新增 -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <div class="modal-head"><h2 id="editTitle">新增紀錄</h2><button class="x" data-close="edit">&times;</button></div>
+    <div class="modal-body" id="editBody">
+      <div class="row2">
+        <div class="field"><label for="fTitle">標題</label><input id="fTitle" type="text" placeholder="例：上保險絲 MS20995C32" maxlength="80"></div>
+        <div class="field"><label for="fCat">分類 / ATA（選填）</label><input id="fCat" type="text" placeholder="ATA-32" list="catList" maxlength="40"><datalist id="catList"></datalist></div>
+      </div>
+
+      <div class="tabs">
+        <button id="tabText" class="active" data-mode="text">單欄文字</button>
+        <button id="tabFields" data-mode="fields">多欄位</button>
+      </div>
+
+      <div class="varbar">
+        <div class="vlabel">插入變數（點一下插到游標處）</div>
+        <div class="vchips" id="insertChips"></div>
+      </div>
+
+      <div id="paneText">
+        <div class="field">
+          <label for="fContent">要輸入系統的文字</label>
+          <textarea id="fContent" placeholder="IAW AMM 20-11-00-910-802 REV.{AMM_REV} Do something…"></textarea>
+          <div class="hint">會變動的版別寫成 <code>{AMM_REV}</code> 這種變數；換行＝一次 Enter。</div>
+        </div>
+      </div>
+
+      <div id="paneFields" class="hidden">
+        <div class="field">
+          <label>各欄位的值（一格一欄，可放變數）</label>
+          <div id="fieldRows"></div>
+          <button class="addfield" id="addFieldBtn">＋ 新增欄位</button>
+        </div>
+        <div class="field">
+          <label for="fSep">欄位之間用哪個鍵跳</label>
+          <select id="fSep"><option value="tab">Tab ↹（跳下一欄，最常見）</option><option value="enter">Enter ↵（換到下一列）</option></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fTrailing">最後一欄之後</label>
+        <select id="fTrailing"><option value="none">不加任何鍵</option><option value="tab">補一個 Tab ↹</option><option value="enter">補一個 Enter ↵</option></select>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn" data-close="edit">取消</button><button class="btn btn-primary" id="saveBtn">儲存</button></div>
+  </div>
+</div>
+
+<!-- 版別 / 變數 -->
+<div class="overlay" id="varsOverlay">
+  <div class="modal vars-card">
+    <div class="modal-head"><h2>版別 / 變數</h2><button class="x" data-close="vars">&times;</button></div>
+    <div class="modal-body">
+      <div class="vintro">在紀錄內容裡寫 <code>{名稱}</code>，例如 <code>REV.{AMM_REV}</code>。在這裡把 <code>AMM_REV</code> 設成 <code>147</code>，掃出來就是 <code>REV.147</code>。版別一改，<b>所有用到它的紀錄一起更新</b>，不用逐筆改。</div>
+      <div id="varRows"></div>
+      <div class="vadd">
+        <input class="vn" id="newVarName" type="text" placeholder="變數名（如 AMM_REV）" maxlength="30">
+        <input class="vv" id="newVarVal" type="text" placeholder="值（如 147）" maxlength="60">
+        <button id="addVarBtn">新增</button>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary" data-close="vars" style="flex:1;justify-content:center;">完成</button></div>
+  </div>
+</div>
+
+<!-- 掃描放大 -->
+<div class="overlay" id="scanOverlay">
+  <div class="modal scan-card">
+    <div class="modal-head"><h2>掃描輸入</h2><button class="x" data-close="scan">&times;</button></div>
+    <div class="scan-body">
+      <div class="scan-tag" id="scanTag"></div>
+      <div class="scan-title" id="scanTitle"></div>
+      <div class="qr-big" id="qrBig"></div>
+      <div class="scan-struct" id="scanStruct"></div>
+      <div class="scan-note" id="scanNote"></div>
+      <div class="scan-foot"><button class="btn" id="copyBtn">複製文字</button><button class="btn btn-primary" id="editFromScan">編輯</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const store = {
+  async get(key){ try{ if(window.storage){ const r=await window.storage.get(key); return r&&r.value?JSON.parse(r.value):null; } }catch(e){} try{ const v=localStorage.getItem(key); return v?JSON.parse(v):null; }catch(e){ return null; } },
+  async set(key,val){ const j=JSON.stringify(val); try{ if(window.storage){ await window.storage.set(key,j); return; } }catch(e){} try{ localStorage.setItem(key,j);}catch(e){} }
+};
+const K_SNIP="quicktag:snippets:v2", K_VARS="quicktag:vars:v1";
+
+let snippets=[], variables=[], activeCat="__all__", searchTerm="", editingId=null, formMode="text", scanId=null, lastFocused=null;
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const SEPCHAR={ tab:"\t", enter:"\n", none:"" };
+const GLYPH={ tab:"↹", enter:"↵" };
+
+function substitute(str){ let out=str||""; variables.forEach(v=>{ if(v.name) out=out.split("{"+v.name+"}").join(v.value!=null?v.value:""); }); return out; }
+function payload(s){
+  const trail=SEPCHAR[s.trailing||"none"]||"";
+  if(s.mode==="fields"){ const sep=SEPCHAR[s.sep||"tab"]; return (s.fields||[]).map(substitute).join(sep)+trail; }
+  return substitute(s.content||"")+trail;
+}
+function rawText(s){ return s.mode==="fields" ? (s.fields||[]).join(" ") : (s.content||""); }
+function varsUsed(s){ const raw=rawText(s); return variables.filter(v=> v.name && raw.indexOf("{"+v.name+"}")>=0); }
+
+function makeQR(el,text,size){ el.innerHTML=""; try{ new QRCode(el,{text:text||" ",width:size,height:size,correctLevel:QRCode.CorrectLevel.M}); }catch(e){ el.textContent="QR 失敗"; } }
+
+function visibleSnippets(){
+  const t=searchTerm.trim().toLowerCase();
+  return snippets.filter(s=>{
+    const catOk=activeCat==="__all__"||(s.category||"")===activeCat;
+    const hay=((s.title||"")+" "+payload(s)+" "+rawText(s)).toLowerCase();
+    return catOk && (!t||hay.includes(t));
+  });
+}
+function renderChips(){
+  const cats=[...new Set(snippets.map(s=>s.category).filter(Boolean))].sort();
+  const wrap=$("#chips");
+  if(cats.length===0){ wrap.innerHTML=""; return; }
+  let html='<button class="chip '+(activeCat==='__all__'?'active':'')+'" data-cat="__all__">全部</button>';
+  cats.forEach(c=> html+='<button class="chip '+(activeCat===c?'active':'')+'" data-cat="'+escapeAttr(c)+'">'+escapeHtml(c)+'</button>');
+  wrap.innerHTML=html;
+  wrap.querySelectorAll(".chip").forEach(b=> b.onclick=()=>{ activeCat=b.dataset.cat; render(); });
+}
+function previewHtml(s){
+  // show substituted text, with substituted variable values highlighted
+  function subHL(str){
+    let out=escapeHtml(str||"");
+    variables.forEach(v=>{ if(v.name){ const val=escapeHtml(v.value!=null?v.value:""); out=out.split(escapeHtml("{"+v.name+"}")).join('<span class="var-hl">'+val+'</span>'); } });
+    return out;
+  }
+  if(s.mode==="fields"){
+    const g='<span class="sep-glyph">'+(GLYPH[s.sep||"tab"])+'</span>';
+    return (s.fields||[]).map(f=>subHL(f)||"∅").join(g);
+  }
+  return subHL(s.content||"");
+}
+function render(){
+  $("#countPill").textContent=snippets.length+" 筆";
+  renderChips();
+  if(snippets.length===0){
+    $("#gridWrap").innerHTML='<div class="empty-state"><div class="icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 21v.01M17 21h.01M21 17h.01"/></svg></div><h2>還沒有任何紀錄</h2><p>把每次重複輸入的維修紀錄存成一張卡，之後掃 QR 就好。</p><button class="btn btn-primary" id="emptyAdd" style="margin:0 auto;">新增第一筆</button></div>';
+    $("#footnote").classList.add("hidden");
+    const b=$("#emptyAdd"); if(b) b.onclick=()=>openEdit(null);
+    return;
+  }
+  $("#footnote").classList.remove("hidden");
+  if(!document.getElementById("grid")) $("#gridWrap").innerHTML='<div class="grid" id="grid"></div>';
+  const g=$("#grid"); const list=visibleSnippets();
+  if(list.length===0){ g.innerHTML='<div style="grid-column:1/-1;color:var(--muted);text-align:center;padding:46px 0;font-size:14px;">沒有符合的紀錄。</div>'; return; }
+  g.innerHTML="";
+  list.forEach(s=>{
+    const card=document.createElement("div"); card.className="card";
+    const tagHtml=s.category?'<span class="tag">'+escapeHtml(s.category)+'</span>':'<span class="tag empty">未分類</span>';
+    let badges="";
+    if(s.mode==="fields") badges+='<span class="mini-flag fields">'+(s.fields||[]).length+' 欄 · '+GLYPH[s.sep||"tab"]+'</span>';
+    if(s.trailing&&s.trailing!=="none") badges+='<span class="mini-flag enter">結尾 '+GLYPH[s.trailing]+'</span>';
+    varsUsed(s).forEach(v=> badges+='<span class="mini-flag var">'+escapeHtml(v.name)+'='+escapeHtml(v.value!=null?v.value:"")+'</span>');
+    card.innerHTML=
+      '<div class="card-head"><div class="meta">'+tagHtml+'<h3>'+escapeHtml(s.title||"（未命名）")+'</h3></div><div class="qr-mini" data-mini></div></div>'+
+      '<div class="card-body"><div class="content-preview">'+previewHtml(s)+'</div>'+(badges?'<div class="badges">'+badges+'</div>':'')+'</div>'+
+      '<div class="card-foot">'+
+        '<button class="scan" data-scan><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><path d="M7 12h10"/></svg>放大掃描</button>'+
+        '<button data-edit><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>編輯</button>'+
+        '<button data-del><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>刪除</button>'+
+      '</div>';
+    g.appendChild(card);
+    makeQR(card.querySelector("[data-mini]"), payload(s), 110);
+    card.querySelector("[data-scan]").onclick=()=>openScan(s.id);
+    card.querySelector("[data-edit]").onclick=()=>openEdit(s.id);
+    card.querySelector("[data-del]").onclick=()=>delSnippet(s.id);
+  });
+}
+
+/* ---- variables: insert chips in editor ---- */
+function renderInsertChips(){
+  const wrap=$("#insertChips");
+  if(variables.length===0){ wrap.innerHTML='<span class="vnone">尚未建立變數　</span><button class="vmanage" id="goVars">＋ 建立變數</button>'; }
+  else{
+    wrap.innerHTML=variables.map(v=>'<button class="vchip" data-ins="'+escapeAttr(v.name)+'">{'+escapeHtml(v.name)+'} <b>'+escapeHtml(v.value!=null?v.value:"")+'</b></button>').join("")+'<button class="vmanage" id="goVars">管理…</button>';
+    wrap.querySelectorAll("[data-ins]").forEach(b=> b.onclick=()=>insertToken("{"+b.dataset.ins+"}"));
+  }
+  const gv=$("#goVars"); if(gv) gv.onclick=()=>openVars();
+}
+function insertToken(token){
+  let el=lastFocused;
+  if(!el || !document.body.contains(el)) el = formMode==="fields" ? document.querySelector("#fieldRows input") : $("#fContent");
+  if(!el){ toast("先點一下要插入的欄位"); return; }
+  const s=el.selectionStart??el.value.length, e=el.selectionEnd??el.value.length;
+  el.value=el.value.slice(0,s)+token+el.value.slice(e);
+  el.focus(); const p=s+token.length; try{ el.selectionStart=el.selectionEnd=p; }catch(_){}
+}
+
+/* ---- field rows ---- */
+function addFieldRow(val){
+  const wrap=$("#fieldRows"); const row=document.createElement("div"); row.className="frow";
+  row.innerHTML='<span class="idx"></span><input type="text" value="'+escapeAttr(val||"")+'" placeholder="欄位值"><button class="mv" data-up>▲</button><button class="mv" data-down>▼</button><button class="rm" data-rm>×</button>';
+  wrap.appendChild(row);
+  row.querySelector("[data-up]").onclick=()=>{ if(row.previousElementSibling){ wrap.insertBefore(row,row.previousElementSibling); reindex(); } };
+  row.querySelector("[data-down]").onclick=()=>{ if(row.nextElementSibling){ wrap.insertBefore(row.nextElementSibling,row); reindex(); } };
+  row.querySelector("[data-rm]").onclick=()=>{ row.remove(); reindex(); };
+  reindex();
+}
+function reindex(){ document.querySelectorAll("#fieldRows .frow .idx").forEach((el,i)=>el.textContent=(i+1)); }
+function readFieldRows(){ return [...document.querySelectorAll("#fieldRows .frow input")].map(i=>i.value).filter(v=>v.trim()!==""); }
+
+function setMode(m){
+  formMode=m;
+  $("#tabText").classList.toggle("active",m==="text");
+  $("#tabFields").classList.toggle("active",m==="fields");
+  $("#paneText").classList.toggle("hidden",m!=="text");
+  $("#paneFields").classList.toggle("hidden",m!=="fields");
+}
+
+function openEdit(id){
+  editingId=id; lastFocused=null;
+  const s=id?snippets.find(x=>x.id===id):null;
+  $("#editTitle").textContent=id?"編輯紀錄":"新增紀錄";
+  $("#fTitle").value=s?(s.title||""):"";
+  $("#fCat").value=s?(s.category||""):"";
+  $("#fContent").value=(s&&s.mode!=="fields")?(s.content||""):"";
+  $("#fSep").value=s?(s.sep||"tab"):"tab";
+  $("#fTrailing").value=s?(s.trailing||"none"):"none";
+  $("#fieldRows").innerHTML="";
+  if(s&&s.mode==="fields"&&(s.fields||[]).length) s.fields.forEach(f=>addFieldRow(f));
+  else { addFieldRow(""); addFieldRow(""); }
+  setMode(s?(s.mode||"text"):"text");
+  $("#catList").innerHTML=[...new Set(snippets.map(x=>x.category).filter(Boolean))].map(c=>'<option value="'+escapeAttr(c)+'">').join("");
+  renderInsertChips();
+  openOverlay("edit");
+  setTimeout(()=>$("#fTitle").focus(),50);
+}
+async function saveSnippet(){
+  const title=$("#fTitle").value.trim();
+  const base={ title:title||"（未命名）", category:$("#fCat").value.trim(), trailing:$("#fTrailing").value };
+  let data;
+  if(formMode==="fields"){
+    const fields=readFieldRows();
+    if(fields.length===0){ toast("至少要有一個欄位值"); return; }
+    data={...base, mode:"fields", fields, sep:$("#fSep").value, content:""};
+  }else{
+    const content=$("#fContent").value;
+    if(!content.trim()){ toast("內容不能空白"); $("#fContent").focus(); return; }
+    data={...base, mode:"text", content, fields:[]};
+  }
+  if(editingId){ const i=snippets.findIndex(x=>x.id===editingId); snippets[i]={...snippets[i],...data}; toast("已更新"); }
+  else { snippets.unshift({ id:uid(), createdAt:Date.now(), ...data }); toast("已新增"); }
+  await store.set(K_SNIP,snippets); closeOverlay("edit"); render();
+}
+async function delSnippet(id){
+  const s=snippets.find(x=>x.id===id);
+  if(!confirm('確定刪除「'+(s?s.title:"")+'」？')) return;
+  snippets=snippets.filter(x=>x.id!==id); await store.set(K_SNIP,snippets); render(); toast("已刪除");
+}
+
+/* ---- variables manager ---- */
+function openVars(){ renderVarRows(); openOverlay("vars"); }
+function renderVarRows(){
+  const wrap=$("#varRows");
+  if(variables.length===0){ wrap.innerHTML='<div class="vempty">還沒有變數。下面新增一個，例如名稱 <b>AMM_REV</b>、值 <b>147</b>。</div>'; return; }
+  wrap.innerHTML="";
+  variables.forEach(v=>{
+    const row=document.createElement("div"); row.className="vrow";
+    row.innerHTML='<span class="vtoken">{'+escapeHtml(v.name)+'}</span><span class="veq">=</span><input type="text" value="'+escapeAttr(v.value!=null?v.value:"")+'"><button class="rm" title="刪除">×</button>';
+    wrap.appendChild(row);
+    const inp=row.querySelector("input");
+    inp.oninput=async()=>{ v.value=inp.value; await store.set(K_VARS,variables); render(); renderInsertChips(); };
+    row.querySelector(".rm").onclick=async()=>{ if(!confirm('刪除變數 {'+v.name+'}？用到它的紀錄會顯示原樣 {'+v.name+'}。')) return; variables=variables.filter(x=>x!==v); await store.set(K_VARS,variables); renderVarRows(); render(); renderInsertChips(); toast("已刪除變數"); };
+  });
+}
+async function addVar(){
+  let name=$("#newVarName").value.trim();
+  const val=$("#newVarVal").value;
+  if(!name){ toast("請輸入變數名"); return; }
+  if(!/^[A-Za-z0-9_]+$/.test(name)){ toast("變數名只能用英數字和底線"); return; }
+  if(variables.some(v=>v.name.toLowerCase()===name.toLowerCase())){ toast("已有同名變數"); return; }
+  variables.push({ name, value:val });
+  await store.set(K_VARS,variables);
+  $("#newVarName").value=""; $("#newVarVal").value="";
+  renderVarRows(); render(); renderInsertChips(); toast("已新增變數");
+}
+
+/* ---- scan ---- */
+function openScan(id){
+  scanId=id; const s=snippets.find(x=>x.id===id);
+  $("#scanTag").textContent=s.category||"未分類";
+  $("#scanTitle").textContent=s.title||"（未命名）";
+  makeQR($("#qrBig"), payload(s), 244);
+  const struct=$("#scanStruct"), note=$("#scanNote");
+  if(s.mode==="fields"){
+    struct.innerHTML=(s.fields||[]).map((f,i)=>'<div class="scan-fieldline"><span class="n">'+(i+1)+'</span><span>'+escapeHtml(substitute(f))+'</span></div>').join("");
+    note.textContent="欄位間以 "+(s.sep==="enter"?"Enter ↵":"Tab ↹")+" 跳"+(s.trailing&&s.trailing!=="none"?"，結尾補 "+GLYPH[s.trailing]:"");
+  }else{
+    struct.innerHTML='<div class="scan-fieldline"><span>'+escapeHtml(substitute(s.content||"")).replace(/\n/g,'<span class="sep-glyph">↵</span>')+'</span></div>';
+    note.textContent=(s.trailing&&s.trailing!=="none")?"結尾補 "+GLYPH[s.trailing]:"";
+  }
+  openOverlay("scan");
+}
+
+/* ---- backup ---- */
+function exportData(){
+  if(snippets.length===0&&variables.length===0){ toast("沒有資料可備份"); return; }
+  const blob=new Blob([JSON.stringify({snippets,variables},null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="quick-tag-backup-"+new Date().toISOString().slice(0,10)+".json"; a.click(); URL.revokeObjectURL(a.href);
+  toast("已下載備份檔");
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=async()=>{
+    try{
+      const parsed=JSON.parse(r.result);
+      const arr=Array.isArray(parsed)?parsed:(parsed.snippets||[]);
+      const vimp=Array.isArray(parsed)?[]:(parsed.variables||[]);
+      const existing=new Set(snippets.map(s=>s.id)); let added=0;
+      arr.forEach(s=>{ if(s&&(s.content||(s.fields&&s.fields.length))){ snippets.push({ id:(s.id&&!existing.has(s.id))?s.id:uid(), title:s.title||"（未命名）", category:s.category||"", mode:s.mode||(s.fields&&s.fields.length?"fields":"text"), content:s.content||"", fields:s.fields||[], sep:s.sep||"tab", trailing:s.trailing||"none", createdAt:s.createdAt||Date.now() }); added++; } });
+      vimp.forEach(v=>{ if(v&&v.name&&!variables.some(x=>x.name.toLowerCase()===v.name.toLowerCase())) variables.push({name:v.name,value:v.value!=null?v.value:""}); });
+      await store.set(K_SNIP,snippets); await store.set(K_VARS,variables);
+      render(); toast("已匯入 "+added+" 筆");
+    }catch(e){ toast("檔案格式不正確"); }
+  };
+  r.readAsText(file);
+}
+
+function openOverlay(n){ $("#"+n+"Overlay").classList.add("open"); }
+function closeOverlay(n){ $("#"+n+"Overlay").classList.remove("open"); }
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g,"&quot;"); }
+let toastT;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1800); }
+
+/* track focus for token insertion */
+$("#editBody").addEventListener("focusin",e=>{ if(e.target.matches("#fContent, #fieldRows input")) lastFocused=e.target; });
+
+$("#addBtn").onclick=()=>openEdit(null);
+$("#saveBtn").onclick=saveSnippet;
+$("#varsBtn").onclick=openVars;
+$("#addVarBtn").onclick=addVar;
+$("#newVarVal").addEventListener("keydown",e=>{ if(e.key==="Enter") addVar(); });
+$("#exportBtn").onclick=exportData;
+$("#importBtn").onclick=()=>$("#importFile").click();
+$("#importFile").onchange=e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=""; };
+$("#search").oninput=e=>{ searchTerm=e.target.value; render(); };
+$("#tabText").onclick=()=>setMode("text");
+$("#tabFields").onclick=()=>setMode("fields");
+$("#addFieldBtn").onclick=()=>addFieldRow("");
+$("#copyBtn").onclick=async()=>{ const s=snippets.find(x=>x.id===scanId); try{ await navigator.clipboard.writeText(payload(s)); toast("已複製"); }catch(e){ toast("複製失敗"); } };
+$("#editFromScan").onclick=()=>{ closeOverlay("scan"); openEdit(scanId); };
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeOverlay(b.dataset.close));
+document.querySelectorAll(".overlay").forEach(o=>o.onclick=e=>{ if(e.target===o) o.classList.remove("open"); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ const open=[...document.querySelectorAll(".overlay.open")]; if(open.length) open[open.length-1].classList.remove("open"); } });
+
+(async()=>{ snippets=(await store.get(K_SNIP))||[]; variables=(await store.get(K_VARS))||[]; render(); })();
+</script>
+</body>
+</html>
